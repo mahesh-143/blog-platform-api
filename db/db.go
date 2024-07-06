@@ -24,7 +24,8 @@ func InitDB() {
 		"password=%s dbname=%s sslmode=disable",
 		host, port, user, password, dbname)
 
-	Connection, err := sql.Open("postgres", connectionStr)
+	var err error
+	Connection, err = sql.Open("postgres", connectionStr)
 	if err != nil {
 		log.Fatal("error validating database connection : ", err)
 	}
