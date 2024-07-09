@@ -72,3 +72,13 @@ func (h *Handler) FindByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+
+func (h *Handler) DeleteByID(w http.ResponseWriter, r *http.Request) {
+	_, err := db.Connection.Exec("DELETE FROM articles WHERE article_id = $1", r.PathValue("id"))
+	if err != nil {
+		http.Error(w, "Failed to delete article: "+err.Error(), http.StatusInternalServerError)
+		return
+	} else {
+		http.Error(w, "Article successfully", http.StatusAccepted)
+	}
+}

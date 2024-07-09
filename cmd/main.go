@@ -18,6 +18,7 @@ func main() {
 	router := http.NewServeMux()
 	router.HandleFunc("GET /api/articles", article_handler.GetAll)
 	router.HandleFunc("GET /api/articles/{id}", article_handler.FindByID)
+	router.HandleFunc("DELETE /api/articles/{id}", article_handler.DeleteByID)
 
 	server := http.Server{
 		Addr:    ":8080",
