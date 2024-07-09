@@ -17,6 +17,7 @@ func main() {
 	article_handler := &article.Handler{}
 	router := http.NewServeMux()
 	router.HandleFunc("GET /api/articles", article_handler.GetAll)
+	router.HandleFunc("GET /api/articles/{id}", article_handler.FindByID)
 
 	server := http.Server{
 		Addr:    ":8080",
