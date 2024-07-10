@@ -2,6 +2,7 @@ package article
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"time"
 
@@ -11,7 +12,7 @@ import (
 type Handler struct{}
 
 type Articles struct {
-	Id        string    `json:"article_id"`
+	Id        int       `json:"article_id"`
 	Title     string    `json:"title"`
 	Content   string    `json:"content"`
 	CreatedAt time.Time `json:"created_at"`
@@ -69,6 +70,29 @@ func (h *Handler) FindByID(w http.ResponseWriter, r *http.Request) {
 	encoder := json.NewEncoder(w)
 	if err := encoder.Encode(articles); err != nil {
 		http.Error(w, "Failed to encode articles to JSON: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
+func (h *Handler) CreateArticle(w http.ResponseWriter, r *http.Request) {
+	var newArticle Articles
+	err := json.NewDecoder(r.Body).Decode(&newArticle)
+	if err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		log.Println("Error decoding request body: ", err)
+		return
+	}
+	defer r.Body.Close()
+	err = db.Connection.QueryRow("INSERT INTO articles (title, content) VALUES ($1, $2) RETURNING article_id, created_at", newArticle.Title, newArticle.Content).Scan(&newArticle.Id, &newArticle.CreatedAt)
+	if err != nil {
+		http.Error(w, "Failed to create article :"+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	response := map[string]interface{}{"message": "Article created!", "Article": newArticle}
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		log.Println("Error encoding JSON response:", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 }
