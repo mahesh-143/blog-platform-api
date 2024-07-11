@@ -20,6 +20,7 @@ func main() {
 	router.HandleFunc("GET /api/articles", article_handler.GetAll)
 	router.HandleFunc("GET /api/articles/{id}", article_handler.FindByID)
 	router.HandleFunc("DELETE /api/articles/{id}", article_handler.DeleteByID)
+	router.HandleFunc("PUT /api/articles/update/{id}", article_handler.UpdateArticle)
 
 	server := http.Server{
 		Addr:    ":8080",

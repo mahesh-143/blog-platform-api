@@ -11,7 +11,7 @@ import (
 
 type Handler struct{}
 
-type Articles struct {
+type Article struct {
 	Id        int       `json:"article_id"`
 	Title     string    `json:"title"`
 	Content   string    `json:"content"`
@@ -26,10 +26,10 @@ func (h *Handler) GetAll(w http.ResponseWriter, r *http.Request) {
 	}
 	defer rows.Close()
 
-	var articles []Articles
+	var articles []Article
 
 	for rows.Next() {
-		var article Articles
+		var article Article
 		rows.Scan(
 			&article.Id,
 			&article.Title,
@@ -54,10 +54,10 @@ func (h *Handler) FindByID(w http.ResponseWriter, r *http.Request) {
 	}
 	defer rows.Close()
 
-	var articles []Articles
+	var articles []Article
 
 	for rows.Next() {
-		var article Articles
+		var article Article
 		rows.Scan(
 			&article.Id,
 			&article.Title,
@@ -75,7 +75,7 @@ func (h *Handler) FindByID(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) CreateArticle(w http.ResponseWriter, r *http.Request) {
-	var newArticle Articles
+	var newArticle Article
 	err := json.NewDecoder(r.Body).Decode(&newArticle)
 	if err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
@@ -89,7 +89,7 @@ func (h *Handler) CreateArticle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response := map[string]interface{}{"message": "Article created!", "Article": newArticle}
+	response := map[string]interface{}{"message": "Article created!", "article": newArticle}
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		log.Println("Error encoding JSON response:", err)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
@@ -102,7 +102,28 @@ func (h *Handler) DeleteByID(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, "Failed to delete article: "+err.Error(), http.StatusInternalServerError)
 		return
-	} else {
-		http.Error(w, "Article successfully", http.StatusAccepted)
+	}
+	http.Error(w, "Article successfully", http.StatusAccepted)
+}
+
+func (h *Handler) UpdateArticle(w http.ResponseWriter, r *http.Request) {
+	var updatedArticle Article
+	err := json.NewDecoder(r.Body).Decode(&updatedArticle)
+	if err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		log.Println("Error decoding request body: ", err)
+		return
+	}
+	defer r.Body.Close()
+	err = db.Connection.QueryRow("UPDATE articles SET title = $1, content = $2 WHERE article_id = $3 RETURNING article_id, created_at", updatedArticle.Title, updatedArticle.Content, r.PathValue("id")).Scan(&updatedArticle.Id, &updatedArticle.CreatedAt)
+	if err != nil {
+		http.Error(w, "Failed to update the article : "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	response := map[string]interface{}{"message": "Article updated!", "article": updatedArticle}
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		log.Println("Error encoding JSON response:", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
 	}
 }
