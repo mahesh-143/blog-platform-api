@@ -18,6 +18,7 @@ func main() {
 	router := http.NewServeMux()
 	router.HandleFunc("POST /api/articles/create", article_handler.CreateArticle)
 	router.HandleFunc("GET /api/articles", article_handler.GetAll)
+	router.HandleFunc("GET /api/articles/{category}", article_handler.GetArticlesByCategory)
 	router.HandleFunc("GET /api/articles/{id}", article_handler.FindByID)
 	router.HandleFunc("DELETE /api/articles/{id}", article_handler.DeleteByID)
 	router.HandleFunc("PUT /api/articles/update/{id}", article_handler.UpdateArticle)
